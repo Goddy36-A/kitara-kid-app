@@ -9,9 +9,7 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+// Project-level dependency repositories are declared once, centrally, in
+// settings.gradle.kts (dependencyResolutionManagement). Declaring them again
+// here via `allprojects { repositories { ... } }` conflicts with that
+// FAIL_ON_PROJECT_REPOS setting and breaks the build.

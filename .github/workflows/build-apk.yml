@@ -51,22 +51,6 @@ jobs:
         if: always()
         run: find app/build/outputs -type f -name "*.apk" -print || echo "no apk files found"
 
-      - name: Publish debug dump
-        if: always()
-        run: |
-          mkdir -p /tmp/debugdump
-          cp /tmp/gradle-output.log /tmp/debugdump/gradle-output.log 2>/dev/null || echo "no gradle log captured" > /tmp/debugdump/gradle-output.log
-          find app/build -maxdepth 6 > /tmp/debugdump/build-tree.txt 2>&1 || true
-          BRANCH="ci-debug-${{ github.run_id }}"
-          git config user.email "ci@kitarakid.local"
-          git config user.name "CI Bot"
-          git checkout --orphan "$BRANCH"
-          git rm -rf . > /dev/null 2>&1 || true
-          cp /tmp/debugdump/* .
-          git add -A
-          git commit -m "debug dump for run ${{ github.run_id }}"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$BRANCH"
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
