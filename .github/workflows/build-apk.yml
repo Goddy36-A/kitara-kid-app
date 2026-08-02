@@ -27,7 +27,22 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+        id: build
+        run: gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-output.log
+        continue-on-error: true
+
+      - name: Surface failure as annotations
+        if: steps.build.outcome == 'failure'
+        run: |
+          grep -iE "error|exception|FAILED|what went wrong|caused by" /tmp/gradle-output.log | tail -25 > /tmp/gradle-errors.log || true
+          if [ ! -s /tmp/gradle-errors.log ]; then
+            tail -25 /tmp/gradle-output.log > /tmp/gradle-errors.log
+          fi
+          while IFS= read -r line; do
+            clean=$(echo "$line" | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
+            echo "::error::${clean}"
+          done < /tmp/gradle-errors.log
+          exit 1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
