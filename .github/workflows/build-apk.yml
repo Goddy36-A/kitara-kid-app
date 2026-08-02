@@ -49,7 +49,10 @@ jobs:
 
       - name: List build outputs
         if: always()
-        run: find app/build/outputs -type f -name "*.apk" -print || echo "no apk files found"
+        run: |
+          FOUND=$(find app/build -type f \( -name "*.apk" -o -name "*.aab" \) 2>&1)
+          TREE=$(find app -maxdepth 4 -type d 2>&1 | tr '\n' ' | ')
+          echo "::warning::APK_SEARCH=[${FOUND}] DIR_TREE=[${TREE}]"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
