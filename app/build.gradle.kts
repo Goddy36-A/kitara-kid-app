@@ -31,6 +31,32 @@ android {
     packaging {
         resources.excludes.add("META-INF/*")
     }
+
+    // Release signing reads from environment variables so the real keystore
+    // and passwords never live in this file or in git history. CI (see
+    // .github/workflows/build-apk.yml) decodes the KEYSTORE_BASE64 secret to
+    // a file and exports these env vars before invoking assembleRelease.
+    // Building assembleRelease locally without these set will just fail at
+    // the signing step — that's expected; use assembleDebug for local work.
+    val ksPath = System.getenv("KEYSTORE_PATH")
+    signingConfigs {
+        if (ksPath != null) {
+            create("release") {
+                storeFile = file(ksPath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            if (ksPath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
 }
 
 dependencies {

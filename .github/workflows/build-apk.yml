@@ -29,6 +29,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Decode signing keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "${{ runner.temp }}/kitarakid-release.jks"
+
       - name: Build debug APK
         id: build
         shell: bash
@@ -50,6 +53,32 @@ jobs:
           done < /tmp/gradle-errors.log
           exit 1
 
+      - name: Build signed release APK
+        id: build_release
+        shell: bash
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/kitarakid-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -o pipefail
+          gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/gradle-release-output.log
+        continue-on-error: true
+
+      - name: Surface release failure as annotations
+        if: steps.build_release.outcome == 'failure'
+        run: |
+          grep -nE "^e: |error:|exception|FAILED|what went wrong|caused by|unresolved reference|cannot find symbol" /tmp/gradle-release-output.log -i | tail -40 > /tmp/gradle-release-errors.log || true
+          if [ ! -s /tmp/gradle-release-errors.log ]; then
+            tail -40 /tmp/gradle-release-output.log > /tmp/gradle-release-errors.log
+          fi
+          while IFS= read -r line; do
+            clean=$(echo "$line" | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
+            echo "::error::${clean}"
+          done < /tmp/gradle-release-errors.log
+          exit 1
+
       - name: List build outputs
         if: always()
         run: |
@@ -57,9 +86,16 @@ jobs:
           TREE=$(find app -maxdepth 4 -type d 2>&1 | tr '\n' ' | ')
           echo "::warning::APK_SEARCH=[${FOUND}] DIR_TREE=[${TREE}]"
 
-      - name: Upload APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: kitara-kid-debug-apk
-          path: app/build/outputs/apk/**/*.apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Upload signed release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kitara-kid-release-apk-SIGNED
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
