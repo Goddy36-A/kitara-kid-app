@@ -54,5 +54,8 @@ dependencies {
     // Image loading for cover art
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    // Ads
+    implementation("com.google.android.gms:play-services-ads:23.2.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

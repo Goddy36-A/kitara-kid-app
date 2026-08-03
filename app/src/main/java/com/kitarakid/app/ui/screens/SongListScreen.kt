@@ -30,7 +30,7 @@ fun SongListScreen(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 96.dp)
+        contentPadding = PaddingValues(bottom = 160.dp)
     ) {
         item {
             Column(Modifier.padding(24.dp, 32.dp, 24.dp, 16.dp)) {

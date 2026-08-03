@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -22,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.google.android.gms.ads.MobileAds
+import com.kitarakid.app.ads.BannerAd
 import com.kitarakid.app.data.SongRepository
 import com.kitarakid.app.player.PlayerViewModel
 import com.kitarakid.app.ui.components.MiniPlayer
@@ -38,6 +41,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        MobileAds.initialize(this)
 
         // Android 13+ requires runtime permission to show the playback
         // notification (which is what makes background/lock-screen controls
@@ -81,14 +86,18 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
         }
 
         val current = playbackState.currentSong
-        if (current != null && !isPlayerExpanded) {
-            MiniPlayer(
-                song = current,
-                isPlaying = playbackState.isPlaying,
-                onTogglePlay = { playerViewModel.togglePlayPause() },
-                onExpand = { isPlayerExpanded = true },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+        if (!isPlayerExpanded) {
+            Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+                if (current != null) {
+                    MiniPlayer(
+                        song = current,
+                        isPlaying = playbackState.isPlaying,
+                        onTogglePlay = { playerViewModel.togglePlayPause() },
+                        onExpand = { isPlayerExpanded = true }
+                    )
+                }
+                BannerAd()
+            }
         }
 
         AnimatedVisibility(visible = isPlayerExpanded && current != null) {
