@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +30,8 @@ fun PlayerScreen(
     playbackState: PlaybackState,
     onTogglePlay: () -> Unit,
     onSeek: (Long) -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
     onCollapse: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -83,20 +87,57 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(Gold),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onTogglePlay) {
+                IconButton(
+                    onClick = onPrevious,
+                    enabled = playbackState.hasPrevious,
+                    modifier = Modifier.size(48.dp)
+                ) {
                     Icon(
-                        if (playbackState.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = "Play/Pause",
-                        tint = MaterialTheme.colorScheme.background,
-                        modifier = Modifier.size(36.dp)
+                        Icons.Filled.SkipPrevious,
+                        contentDescription = "Previous",
+                        tint = if (playbackState.hasPrevious) MaterialTheme.colorScheme.onBackground
+                               else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(20.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Gold),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = onTogglePlay) {
+                        Icon(
+                            if (playbackState.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            contentDescription = "Play/Pause",
+                            tint = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.width(20.dp))
+
+                IconButton(
+                    onClick = onNext,
+                    enabled = playbackState.hasNext,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SkipNext,
+                        contentDescription = "Next",
+                        tint = if (playbackState.hasNext) MaterialTheme.colorScheme.onBackground
+                               else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }

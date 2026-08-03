@@ -1,8 +1,11 @@
 package com.kitarakid.app
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,8 +33,20 @@ class MainActivity : ComponentActivity() {
 
     private val playerViewModel: PlayerViewModel by viewModels()
 
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op either way */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Android 13+ requires runtime permission to show the playback
+        // notification (which is what makes background/lock-screen controls
+        // visible). Playback still works without it, just without the
+        // system notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
         setContent {
             KitaraKidTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -46,6 +62,8 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
     val songs = remember { SongRepository.getSongs() }
     val playbackState by playerViewModel.state.collectAsState()
     var isPlayerExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(songs) { playerViewModel.setQueue(songs) }
 
     Box(Modifier.fillMaxSize()) {
         Scaffold { padding ->
@@ -81,6 +99,8 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
                         playbackState = playbackState,
                         onTogglePlay = { playerViewModel.togglePlayPause() },
                         onSeek = { playerViewModel.seekTo(it) },
+                        onNext = { playerViewModel.skipNext() },
+                        onPrevious = { playerViewModel.skipPrevious() },
                         onCollapse = { isPlayerExpanded = false }
                     )
                 }

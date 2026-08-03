@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.kitarakid.app"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -48,6 +48,8 @@ dependencies {
     // Media playback (handles both local and remote mp3 URLs)
     implementation("androidx.media3:media3-exoplayer:1.3.1")
     implementation("androidx.media3:media3-session:1.3.1")
+    implementation("androidx.media3:media3-datasource:1.3.1")
+    implementation("com.google.guava:guava:33.2.1-android")
 
     // Image loading for cover art
     implementation("io.coil-kt:coil-compose:2.6.0")
