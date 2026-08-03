@@ -15,10 +15,6 @@
         android:theme="@style/Theme.KitaraKid"
         android:supportsRtl="true">
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-6437242853657606~2465355118" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
