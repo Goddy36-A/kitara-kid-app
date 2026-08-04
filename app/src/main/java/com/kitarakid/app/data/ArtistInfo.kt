@@ -15,8 +15,8 @@ object ArtistInfo {
         "https://mdundo.com/media/picture/600624_NNuX7tSGAfqyXeKNPHQagBDSJEQi_b.jpg"
 
     // Edit these with your real profile URLs. null hides the button.
-    const val INSTAGRAM_URL: String? = null
-    const val WHATSAPP_URL: String? = null
-    const val YOUTUBE_URL: String? = null
-    const val MDUNDO_URL: String? = "https://play.mdundo.com/artist/600624/Kitara-kid"
+    val INSTAGRAM_URL: String? = null
+    val WHATSAPP_URL: String? = null
+    val YOUTUBE_URL: String? = null
+    val MDUNDO_URL: String? = "https://play.mdundo.com/artist/600624/Kitara-kid"
 }
