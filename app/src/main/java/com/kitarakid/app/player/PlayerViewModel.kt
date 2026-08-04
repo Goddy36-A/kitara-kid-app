@@ -28,6 +28,8 @@ data class PlaybackState(
     val durationMs: Long = 0L,
     val hasNext: Boolean = false,
     val hasPrevious: Boolean = false,
+    val shuffleEnabled: Boolean = false,
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
     val error: String? = null
 )
 
@@ -84,6 +86,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
             override fun onPlayerError(error: PlaybackException) {
                 _state.value = _state.value.copy(error = error.message ?: "Playback error")
+            }
+
+            override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                _state.value = _state.value.copy(shuffleEnabled = shuffleModeEnabled)
+            }
+
+            override fun onRepeatModeChanged(repeatMode: Int) {
+                _state.value = _state.value.copy(repeatMode = repeatMode)
             }
         })
     }
@@ -143,6 +153,35 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun seekTo(positionMs: Long) {
         controller?.seekTo(positionMs)
         _state.value = _state.value.copy(positionMs = positionMs)
+    }
+
+    fun toggleShuffle() {
+        val c = controller ?: return
+        c.shuffleModeEnabled = !c.shuffleModeEnabled
+    }
+
+    /** Cycles OFF -> ALL -> ONE -> OFF. */
+    fun cycleRepeatMode() {
+        val c = controller ?: return
+        c.repeatMode = when (c.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+    }
+
+    /** Enables shuffle and starts playback from a random point in the queue. */
+    fun shuffleAndPlay() {
+        val c = controller ?: return
+        if (queue.isEmpty()) return
+        c.shuffleModeEnabled = true
+        if (c.mediaItemCount == 0) {
+            c.setMediaItems(queue.map { it.toMediaItem() }, queue.indices.random(), 0L)
+            c.prepare()
+        } else {
+            c.seekTo(queue.indices.random(), 0L)
+        }
+        c.play()
     }
 
     private fun Song.toMediaItem(): MediaItem =

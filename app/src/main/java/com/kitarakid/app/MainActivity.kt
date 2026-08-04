@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.kitarakid.app.data.FavoritesRepository
 import com.kitarakid.app.data.SongRepository
 import com.kitarakid.app.player.PlayerViewModel
 import com.kitarakid.app.ui.components.MiniPlayer
@@ -59,9 +61,16 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun KitaraApp(playerViewModel: PlayerViewModel) {
+    val context = LocalContext.current
     val songs = remember { SongRepository.getSongs() }
     val playbackState by playerViewModel.state.collectAsState()
     var isPlayerExpanded by remember { mutableStateOf(false) }
+
+    val favoritesRepository = remember { FavoritesRepository(context) }
+    val favoriteIds by favoritesRepository.favoriteIds.collectAsState()
+
+    var searchQuery by remember { mutableStateOf("") }
+    var showFavoritesOnly by remember { mutableStateOf(false) }
 
     LaunchedEffect(songs) { playerViewModel.setQueue(songs) }
 
@@ -70,10 +79,20 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
             SongListScreen(
                 songs = songs,
                 currentlyPlayingId = playbackState.currentSong?.id,
+                favoriteIds = favoriteIds,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                showFavoritesOnly = showFavoritesOnly,
+                onToggleShowFavoritesOnly = { showFavoritesOnly = !showFavoritesOnly },
                 onSongClick = { song ->
                     if (song.isPlayableInApp) {
                         playerViewModel.play(song)
                     }
+                    isPlayerExpanded = true
+                },
+                onToggleFavorite = { song -> favoritesRepository.toggleFavorite(song.id) },
+                onShufflePlay = {
+                    playerViewModel.shuffleAndPlay()
                     isPlayerExpanded = true
                 },
                 modifier = Modifier.padding(padding)
@@ -97,10 +116,14 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
                     PlayerScreen(
                         song = current,
                         playbackState = playbackState,
+                        isFavorite = favoriteIds.contains(current.id),
                         onTogglePlay = { playerViewModel.togglePlayPause() },
                         onSeek = { playerViewModel.seekTo(it) },
                         onNext = { playerViewModel.skipNext() },
                         onPrevious = { playerViewModel.skipPrevious() },
+                        onToggleShuffle = { playerViewModel.toggleShuffle() },
+                        onCycleRepeat = { playerViewModel.cycleRepeatMode() },
+                        onToggleFavorite = { favoritesRepository.toggleFavorite(current.id) },
                         onCollapse = { isPlayerExpanded = false }
                     )
                 }

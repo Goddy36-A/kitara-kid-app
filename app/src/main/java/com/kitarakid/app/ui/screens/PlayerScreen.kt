@@ -1,12 +1,18 @@
 package com.kitarakid.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.*
@@ -17,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.kitarakid.app.model.Song
 import com.kitarakid.app.player.PlaybackState
@@ -28,10 +35,14 @@ import android.net.Uri
 fun PlayerScreen(
     song: Song,
     playbackState: PlaybackState,
+    isFavorite: Boolean,
     onTogglePlay: () -> Unit,
     onSeek: (Long) -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onToggleFavorite: () -> Unit,
     onCollapse: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -60,17 +71,31 @@ fun PlayerScreen(
 
         Spacer(Modifier.height(28.dp))
 
-        Text(
-            song.title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "Kitara Kid",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    song.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Kitara Kid",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription = if (isFavorite) "Unfavorite" else "Favorite",
+                tint = if (isFavorite) Gold else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable(onClick = onToggleFavorite)
+                    .padding(2.dp)
+            )
+        }
 
         Spacer(Modifier.height(20.dp))
 
@@ -85,13 +110,24 @@ fun PlayerScreen(
                 )
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = onToggleShuffle, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        Icons.Filled.Shuffle,
+                        contentDescription = "Shuffle",
+                        tint = if (playbackState.shuffleEnabled) Gold else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+
                 IconButton(
                     onClick = onPrevious,
                     enabled = playbackState.hasPrevious,
@@ -106,7 +142,7 @@ fun PlayerScreen(
                     )
                 }
 
-                Spacer(Modifier.width(20.dp))
+                Spacer(Modifier.width(16.dp))
 
                 Box(
                     modifier = Modifier
@@ -125,7 +161,7 @@ fun PlayerScreen(
                     }
                 }
 
-                Spacer(Modifier.width(20.dp))
+                Spacer(Modifier.width(16.dp))
 
                 IconButton(
                     onClick = onNext,
@@ -138,6 +174,17 @@ fun PlayerScreen(
                         tint = if (playbackState.hasNext) MaterialTheme.colorScheme.onBackground
                                else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                IconButton(onClick = onCycleRepeat, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        if (playbackState.repeatMode == Player.REPEAT_MODE_ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
+                        contentDescription = "Repeat",
+                        tint = if (playbackState.repeatMode != Player.REPEAT_MODE_OFF) Gold else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
