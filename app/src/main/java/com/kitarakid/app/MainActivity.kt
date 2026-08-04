@@ -24,8 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.kitarakid.app.data.CatalogCache
 import com.kitarakid.app.data.FavoritesRepository
+import com.kitarakid.app.data.GitHubCatalogFetcher
 import com.kitarakid.app.data.SongRepository
+import com.kitarakid.app.model.Song
 import com.kitarakid.app.player.PlayerViewModel
 import com.kitarakid.app.ui.components.MiniPlayer
 import com.kitarakid.app.ui.screens.AboutScreen
@@ -65,7 +68,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun KitaraApp(playerViewModel: PlayerViewModel) {
     val context = LocalContext.current
-    val songs = remember { SongRepository.getSongs() }
+    val catalogCache = remember { CatalogCache(context) }
+    var songs by remember { mutableStateOf<List<Song>>(catalogCache.load() ?: SongRepository.getSongs()) }
     val playbackState by playerViewModel.state.collectAsState()
     var isPlayerExpanded by remember { mutableStateOf(false) }
 
@@ -75,6 +79,17 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
     var searchQuery by remember { mutableStateOf("") }
     var showFavoritesOnly by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
+
+    // Cache/fallback shows instantly above; this refreshes from the live
+    // GitHub Release in the background so adding/removing tracks there
+    // shows up next time the app opens, without a new app build.
+    LaunchedEffect(Unit) {
+        val live = GitHubCatalogFetcher.fetchSongs()
+        if (!live.isNullOrEmpty()) {
+            songs = live
+            catalogCache.save(live)
+        }
+    }
 
     LaunchedEffect(songs) { playerViewModel.setQueue(songs) }
 
