@@ -23,10 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.kitarakid.app.data.FavoritesRepository
 import com.kitarakid.app.data.SongRepository
 import com.kitarakid.app.player.PlayerViewModel
 import com.kitarakid.app.ui.components.MiniPlayer
+import com.kitarakid.app.ui.screens.AboutScreen
 import com.kitarakid.app.ui.screens.PlayerScreen
 import com.kitarakid.app.ui.screens.SongListScreen
 import com.kitarakid.app.ui.theme.KitaraKidTheme
@@ -39,6 +41,7 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op either way */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         // Android 13+ requires runtime permission to show the playback
@@ -71,6 +74,7 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
 
     var searchQuery by remember { mutableStateOf("") }
     var showFavoritesOnly by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
 
     LaunchedEffect(songs) { playerViewModel.setQueue(songs) }
 
@@ -95,6 +99,7 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
                     playerViewModel.shuffleAndPlay()
                     isPlayerExpanded = true
                 },
+                onOpenAbout = { showAbout = true },
                 modifier = Modifier.padding(padding)
             )
         }
@@ -127,6 +132,12 @@ fun KitaraApp(playerViewModel: PlayerViewModel) {
                         onCollapse = { isPlayerExpanded = false }
                     )
                 }
+            }
+        }
+
+        AnimatedVisibility(visible = showAbout) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                AboutScreen(onCollapse = { showAbout = false })
             }
         }
     }

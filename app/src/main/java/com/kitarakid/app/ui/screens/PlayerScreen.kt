@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
@@ -93,6 +94,29 @@ fun PlayerScreen(
                     .size(28.dp)
                     .clip(RoundedCornerShape(50))
                     .clickable(onClick = onToggleFavorite)
+                    .padding(2.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Icon(
+                Icons.Filled.Share,
+                contentDescription = "Share",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable {
+                        val link = song.mdundoUrl ?: song.youtubeUrl
+                        val message = if (link != null) {
+                            "Listen to \"${song.title}\" by Kitara Kid: $link"
+                        } else {
+                            "Listen to \"${song.title}\" by Kitara Kid"
+                        }
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, message)
+                        }
+                        context.startActivity(Intent.createChooser(sendIntent, "Share track"))
+                    }
                     .padding(2.dp)
             )
         }
