@@ -16,7 +16,7 @@ object ArtistInfo {
 
     // Edit these with your real profile URLs. null hides the button.
     val INSTAGRAM_URL: String? = null
-    val WHATSAPP_URL: String? = null
-    val YOUTUBE_URL: String? = null
+    val WHATSAPP_URL: String? = "https://wa.me/256772013276"
+    val YOUTUBE_URL: String? = "https://www.youtube.com/@kitarakid"
     val MDUNDO_URL: String? = "https://play.mdundo.com/artist/600624/Kitara-kid"
 }
