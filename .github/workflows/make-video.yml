@@ -17,6 +17,9 @@ jobs:
   make-video:
     runs-on: ubuntu-latest
     steps:
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
       - name: Download song
         run: |
           curl -sL -o song.mp3 "https://github.com/${{ github.repository }}/releases/download/kitara-kid-all-songs/${{ github.event.inputs.song_filename }}"
