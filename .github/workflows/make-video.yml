@@ -30,13 +30,24 @@ jobs:
           file cover.jpg
 
       - name: Build video with ffmpeg
+        id: build
         run: |
+          set -o pipefail
           SAFE_NAME=$(echo "${{ github.event.inputs.video_title }}" | tr -c '[:alnum:]_-' '_')
           echo "OUTPUT_NAME=${SAFE_NAME}.mp4" >> $GITHUB_ENV
           ffmpeg -y -loop 1 -i cover.jpg -i song.mp3 \
             -c:v libx264 -tune stillimage -pix_fmt yuv420p \
             -c:a aac -b:a 192k -shortest -movflags +faststart \
-            "${SAFE_NAME}.mp4"
+            "${SAFE_NAME}.mp4" 2>&1 | tee /tmp/ffmpeg-output.log
+        continue-on-error: true
+
+      - name: Surface ffmpeg failure
+        if: steps.build.outcome == 'failure'
+        run: |
+          CLEAN=$(tail -c 1500 /tmp/ffmpeg-output.log | sed 's/%/%25/g; s/\r/%0D/g' | tr '\n' ' ')
+          echo "::error::FFMPEG_ERROR=[${CLEAN}]"
+          echo "::warning::IMAGE_FILE_INFO=[$(file cover.jpg)] SONG_FILE_INFO=[$(file song.mp3)]"
+          exit 1
 
       - name: Upload video artifact
         uses: actions/upload-artifact@v4
