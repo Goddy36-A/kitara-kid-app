@@ -1,0 +1,46 @@
+name: Make Video From Song + Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      song_filename:
+        description: 'Exact filename in the kitara-kid-all-songs release (e.g. 01_Dance_To_The_King.mp3)'
+        required: true
+      image_url:
+        description: 'Direct URL to the image to use as the video background (any public image URL)'
+        required: true
+      video_title:
+        description: 'Title to burn as metadata / use for the output filename'
+        required: true
+
+jobs:
+  make-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download song
+        run: |
+          curl -sL -o song.mp3 "https://github.com/${{ github.repository }}/releases/download/kitara-kid-all-songs/${{ github.event.inputs.song_filename }}"
+          ls -la song.mp3
+          file song.mp3
+
+      - name: Download image
+        run: |
+          curl -sL -o cover.jpg "${{ github.event.inputs.image_url }}"
+          ls -la cover.jpg
+          file cover.jpg
+
+      - name: Build video with ffmpeg
+        run: |
+          SAFE_NAME=$(echo "${{ github.event.inputs.video_title }}" | tr -c '[:alnum:]_-' '_')
+          echo "OUTPUT_NAME=${SAFE_NAME}.mp4" >> $GITHUB_ENV
+          ffmpeg -y -loop 1 -i cover.jpg -i song.mp3 \
+            -c:v libx264 -tune stillimage -pix_fmt yuv420p \
+            -c:a aac -b:a 192k -shortest -movflags +faststart \
+            "${SAFE_NAME}.mp4"
+
+      - name: Upload video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-video
+          path: ${{ env.OUTPUT_NAME }}
+          if-no-files-found: error
